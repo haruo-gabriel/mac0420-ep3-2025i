@@ -1,105 +1,153 @@
+var gBaloes = [];
+
 class Esfera {
+	constructor(ndivisoes = 0, center = [0, 0, 0]) {
+		this.vao = null;
+		this.pos = [];
+		// this.center = center;
+		this.nor = [];
+		this.axis = 0;
+		this.theta = vec3(0.0, 0.0, 0.0);
+		this.color = [];
+		this.paused = false;
 
-    constructor(ndivisoes=0) {
-        const esfera_cantos = [
-            //positivos
-            vec3(1.0, 0.0, 0.0),
-            vec3(0.0, 1.0, 0.0),
-            vec3(0.0, 0.0, 1.0),
-            // negativos
-            vec3(-1.0, 0.0, 0.0),
-            vec3(0.0, -1.0, 0.0),
-            vec3(0.0, 0.0, -1.0),
-        ]
-        
+		const vp = [
+			// Vértices positivos
+			vec3(1.0, 0.0, 0.0),
+			vec3(0.0, 1.0, 0.0),
+			vec3(0.0, 0.0, 1.0),
+		];
+		const vn = [
+			// Vértices negativos
+			vec3(-1.0, 0.0, 0.0),
+			vec3(0.0, -1.0, 0.0),
+			vec3(0.0, 0.0, -1.0),
+		];
+		const triangulo = [
+			[vp[0], vp[1], vp[2]],
+			[vp[0], vp[1], vn[2]],
+			[vp[0], vn[1], vp[2]],
+			[vp[0], vn[1], vn[2]],
+			[vn[0], vp[1], vp[2]],
+			[vn[0], vp[1], vn[2]],
+			[vn[0], vn[1], vp[2]],
+			[vn[0], vn[1], vn[2]],
+		];
 
-        const triangulo = [
-            [esfera_cantos[0], esfera_cantos[1], esfera_cantos[2]],
-            [esfera_cantos[0], esfera_cantos[1], esfera_cantos[5]],
-            [esfera_cantos[0], esfera_cantos[4], esfera_cantos[2]],
-            [esfera_cantos[0], esfera_cantos[4], esfera_cantos[5]],
-            [esfera_cantos[3], esfera_cantos[1], esfera_cantos[2]],
-            [esfera_cantos[3], esfera_cantos[1], esfera_cantos[5]],
-            [esfera_cantos[3], esfera_cantos[4], esfera_cantos[2]],
-            [esfera_cantos[3], esfera_cantos[4], esfera_cantos[5]],
-        ]
+		// Divisão dos triângulos
+		for (let i = 0; i < triangulo.length; i++) {
+			let a, b, c;
+			[a, b, c] = triangulo[i];
+			this.dividaTriangulo(a, b, c, ndivisoes);
+		}
 
-        console.log(triangulo)
+		// Criação do VAO
+		this.vao = gl.createVertexArray();
 
-        this.pos = [];
-        this.nor = [];
-        this.axis = 0;
-        this.theta = vec3(0.0, 0.0, 0.0);
-        this.paused = false;
-        
-        for (let i = 0; i < triangulo.length; i++) {
-            let a, b, c;
-            [a, b, c] = triangulo[i];
-            this.dividaTriangulo(a, b, c, ndivisoes);
-          }
-    }
+		console.log(triangulo);
+	}
 
-    dividaTriangulo(a, b, c, ndivs) {
-        // Cada nível quebra um triângulo em 4 subtriângulos
-        // a, b, c em ordem mão direita
-        //    c
-        // a  b 
-      
-        // caso base
-        if (ndivs > 0) {
-          let ab = mix(a, b, 0.5);
-          let bc = mix(b, c, 0.5);
-          let ca = mix(c, a, 0.5);
-      
-          ab = normalize(ab);
-          bc = normalize(bc);
-          ca = normalize(ca);
-      
-          this.dividaTriangulo(a, ab, ca, ndivs - 1);
-          this.dividaTriangulo(b, bc, ab, ndivs - 1);
-          this.dividaTriangulo(c, ca, bc, ndivs - 1);
-          this.dividaTriangulo(ab, bc, ca, ndivs - 1);
-        }
-      
-        else {
-          this.insiraTriangulo(a, b, c);
-        }
-      };
-      
-      insiraTriangulo(a, b, c) {
-        this.pos.push(a);
-        this.pos.push(b);
-        this.pos.push(c);
+	bindBuffers() {
+		gl.bindVertexArray(this.vao);
 
-        // Get the normal of the face
-        const v1 = subtract(b, a);
-        const v2 = subtract(c, a);
-        const normal = vec3(cross(v1, v2));
+		// Buffer de normais
+		gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+		gl.bufferData(gl.ARRAY_BUFFER, flatten(this.nor), gl.STATIC_DRAW);
+		const norLoc = gl.getAttribLocation(program, "aNormal");
+		gl.vertexAttribPointer(norLoc, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(norLoc);
 
-        this.nor.push(
-            normal, normal, normal,
-        );
-      }
+		// Buffer de posições
+		gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+		gl.bufferData(gl.ARRAY_BUFFER, flatten(this.pos), gl.STATIC_DRAW);
+		const posLoc = gl.getAttribLocation(program, "aPosition");
+		gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
+		gl.enableVertexAttribArray(posLoc);
+
+		// Buffer de cores
+		// gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
+		// gl.bufferData(gl.ARRAY_BUFFER, flatten(this.color), gl.STATIC_DRAW);
+		// const colorLoc = gl.getAttribLocation(program, "aColor");
+		// gl.vertexAttribPointer(colorLoc, 3, gl.FLOAT, false, 0, 0);
+		// gl.enableVertexAttribArray(colorLoc);
+	}
+
+	renderiza() {
+		gl.bindVertexArray(this.vao);
+
+		if (!this.paused) this.theta[this.axis] += 1.0;
+
+		// Rotação
+		const rx = rotateX(this.theta[0]);
+		const ry = rotateY(this.theta[1]);
+		const rz = rotateZ(this.theta[2]);
+		const rotation = mult(rz, mult(ry, rx));
+
+		// Translação
+		// const translation = translate(this.center);
+
+		// Matriz model
+		// const modelMatrix = mult(translation, rotation);
+		const modelMatrix = rotation;
+
+		// Matriz view
+		const r = camera.raio;
+		const theta = camera.theta;
+		const pho = camera.pho;
+		const eye = vec3(
+			r * Math.sin(theta) * Math.cos(pho),
+			r * Math.sin(pho),
+			r * Math.cos(theta) * Math.cos(pho)
+		);
+		viewMatrix = lookAt(eye, nail.at, nail.up);
+		gl.uniformMatrix4fv(uView, false, flatten(viewMatrix));
+
+		const modelViewMatrix = mult(viewMatrix, modelMatrix);
+		const inverseTransposeModel = transpose(inverse(modelViewMatrix));
+
+		gl.uniformMatrix4fv(uModel, false, flatten(modelMatrix));
+		gl.uniformMatrix4fv(
+			uInverseTransposeModel,
+			false,
+			flatten(inverseTransposeModel)
+		);
+
+		gl.drawArrays(gl.TRIANGLES, 0, this.pos.length);
+
+		gl.bindVertexArray(null);
+	}
+
+	dividaTriangulo(a, b, c, ndivs) {
+		if (ndivs > 0) {
+			// Caso recursivo
+			let ab = mix(a, b, 0.5);
+			let bc = mix(b, c, 0.5);
+			let ca = mix(c, a, 0.5);
+
+			ab = normalize(ab);
+			bc = normalize(bc);
+			ca = normalize(ca);
+
+			this.dividaTriangulo(a, ab, ca, ndivs - 1);
+			this.dividaTriangulo(b, bc, ab, ndivs - 1);
+			this.dividaTriangulo(c, ca, bc, ndivs - 1);
+			this.dividaTriangulo(ab, bc, ca, ndivs - 1);
+		} else {
+			// Caso base
+			this.insiraTriangulo(a, b, c);
+		}
+	}
+
+	insiraTriangulo(a, b, c) {
+		this.pos.push(a);
+		this.pos.push(b);
+		this.pos.push(c);
+
+		// Normal do triângulo
+		const v1 = subtract(b, a);
+		const v2 = subtract(c, a);
+		const normal = vec3(cross(v1, v2));
+
+		this.nor.push(normal, normal, normal);
+	}
 }
-
-const FOVY = 60.0;
-const ASPECT = 1.0;
-const NEAR = 0.1;
-const FAR = 50.0;
-
-const EYE = vec3(2.0, 2.0, 0.0);
-const AT = vec3(0.0, 0.0, 0.0);
-const UP = vec3(0.0, 1.0, 0.0);
-
-const LIGHT = {
-    position: vec4(0.0, 1.0, 0.0, 1.0),
-    ambientColor: vec4(0.1, 0.1, 0.1, 1.0),
-    diffuseColor: vec4(1.0, 1.0, 1.0, 1.0),
-    specularColor: vec4(1.0, 1.0, 1.0, 1.0)
-};
-
-const MATERIAL = {
-    ambientColor: vec4(0.8, 0.8, 0.8, 1.0),
-    diffuseColor: vec4(1.0, 0.5, 1.0, 1.0),
-    shininess: 50.0
-};

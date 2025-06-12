@@ -20,8 +20,7 @@ class Esfera {
 		this.diffuseColor = diffuseColor;
 		this.shininess = shininess;
 		this.axis = 0;
-		this.theta = vec3(0.0, 0.0, 0.0);
-		this.paused = false;
+		this.rotacaoAngulo = vec3(0.0, 0.0, 0.0);
 		this.vao = gl.createVertexArray();
 
 		const vp = [
@@ -75,14 +74,20 @@ class Esfera {
 		gl.enableVertexAttribArray(posLoc);
 	}
 
-	atualiza() {
-		if (!this.paused) {
-			// Atualiza posição (apenas para cair)
-			this.center[1] -= this.vel[1];
+	atualiza(delta) {
+		const deltaSeg = delta / 1000.0;
 
-			// Atualiza rotação
-			this.theta[this.axis] += 1.0;
+		// Atualiza posição (apenas para cair)
+		this.center[1] += this.vel[1] * deltaSeg;
+
+		// Move o balão para o chão se atravessar o limite
+		if (this.center[1] > BOLHA_MAX_POS) {
+			this.center[1] = BOLHA_MIN_POS;
 		}
+
+		// Atualiza rotação
+		const velRotacao = 1.0;
+		this.rotacaoAngulo[this.axis] += velRotacao * deltaSeg;
 	}
 
 	renderiza() {
@@ -96,9 +101,9 @@ class Esfera {
 		translation[3][3] = 1.0;
 
 		// Rotação
-		const rx = rotateX(this.theta[0]);
-		const ry = rotateY(this.theta[1]);
-		const rz = rotateZ(this.theta[2]);
+		const rx = rotateX(this.rotacaoAngulo[0]);
+		const ry = rotateY(this.rotacaoAngulo[1]);
+		const rz = rotateZ(this.rotacaoAngulo[2]);
 		const rotation = mult(rz, mult(ry, rx));
 
 		// Escala
@@ -119,7 +124,7 @@ class Esfera {
 		let modelMatrix = mult(translation, rotation);
 		modelMatrix = mult(modelMatrix, scale);
 
-		// Get view matrix from camera
+		// Matriz view
 		viewMatrix = gNail.getViewMatrix();
 		gl.uniformMatrix4fv(uView, false, flatten(viewMatrix));
 

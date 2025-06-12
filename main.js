@@ -15,6 +15,7 @@ function main() {
 
 	for (let i = 0; i < BOLHA_NUMERO; i++) {
 		const ndivisoes = randomRange(BOLHA_MIN_RESOLUCAO, BOLHA_MAX_RESOLUCAO);
+
 		const initial_pos = vec3(
 			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
 			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
@@ -26,6 +27,7 @@ function main() {
 			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL)
 		);
 		const scale = randomRange(BOLHA_MIN_RAIO, BOLHA_MAX_RAIO);
+
 		const ambientColor = vec4(
 			randomRange(0, 1.0),
 			randomRange(0, 1.0),
@@ -61,15 +63,71 @@ function main() {
 
 	criaInterface();
 
-	atualizaCena();
-
+	gTempoAnterior = gTempoAtual = Date.now();
 	renderizaCena();
 }
 
 function criaInterface() {
-	document.getElementById("bRun").onclick = () => {};
+	document.getElementById("bRun").onclick = () => {
+		gPaused = !gPaused;
 
-	document.getElementById("bStep").onclick = () => {};
+		if (gPaused) {
+			document.getElementById("bRun").value = "Executar";
+		} else {
+			document.getElementById("bRun").value = "Pausar";
+		}
+	};
+
+	document.getElementById("bStep").onclick = () => {
+		if (gPaused) {
+			const delta = 100.0;
+			gNail.moveForward(delta);
+
+			for (let balao of gBaloes) {
+				balao.atualiza(delta);
+			}
+		}
+	};
+
+	window.onkeydown = function (event) {
+		switch (event.key) {
+			// Controle de velocidade da câmera
+			case "j":
+				gNail.atualizaVel(-NAIL_VEL_INCREMENT);
+				break;
+			case "k":
+				gNail.atualizaVel(0.0);
+				break;
+			case "l":
+				gNail.atualizaVel(+NAIL_VEL_INCREMENT);
+				break;
+
+			// Controle de rotação da câmera
+			case "s":
+				gNail.pitch = 0.0;
+				gNail.yaw = 0.0;
+				gNail.roll = 0.0;
+				break;
+			case "d": // Rotaciona pra esquerda
+				gNail.rotacionaYaw(+NAIL_ROT_INCREMENT);
+				break;
+			case "a": // Rotaciona pra direita
+				gNail.rotacionaYaw(-NAIL_ROT_INCREMENT);
+				break;
+			case "w": // Rotaciona pra cima
+				gNail.rotacionaPitch(NAIL_ROT_INCREMENT);
+				break;
+			case "x": // Rotaciona pra baixo
+				gNail.rotacionaPitch(-NAIL_ROT_INCREMENT);
+				break;
+			case "z": // Rotaciona em sentido horário
+				gNail.rotacionaRoll(NAIL_ROT_INCREMENT);
+				break;
+			case "c": // Rotaciona em sentido anti-horário
+				gNail.rotacionaRoll(-NAIL_ROT_INCREMENT);
+				break;
+		}
+	};
 }
 
 function criaShaders() {
@@ -106,59 +164,28 @@ function criaShaders() {
 	uShininess = gl.getUniformLocation(program, "uShininess");
 }
 
-function atualizaCena() {
-	for (let balao of gBaloes) {
-		balao.atualiza();
-	}
-}
-
 function renderizaCena() {
+	gTempoAtual = Date.now();
+	let delta = gTempoAtual - gTempoAnterior;
+
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	gNail.moveForward();
+	if (!gPaused) {
+		gNail.moveForward();
+
+		for (let balao of gBaloes) {
+			balao.atualiza(delta);
+		}
+	}
 
 	for (let balao of gBaloes) {
-		balao.atualiza();
 		balao.renderiza();
 	}
 
+	gTempoAnterior = gTempoAtual;
+
 	window.requestAnimationFrame(renderizaCena);
 }
-
-window.onkeydown = function (event) {
-    switch (event.key) {
-		// Camera velocity controls
-		case "j":
-			gNail.atualizaVel(-NAIL_VEL_INCREMENT);
-			break;
-		case "k": 
-			gNail.atualizaVel(0.0);
-			break;
-		case "l":
-			gNail.atualizaVel(+NAIL_VEL_INCREMENT);
-			break;
-
-        // Camera rotation controls
-        case "d": // Rotate left
-            gNail.rotacionaYaw(+NAIL_ROT_INCREMENT);
-            break;
-        case "a": // Rotate right
-            gNail.rotacionaYaw(-NAIL_ROT_INCREMENT);
-            break;
-        case "w": // Rotate up
-            gNail.rotacionaPitch(NAIL_ROT_INCREMENT);
-            break;
-        case "x": // Rotate down
-            gNail.rotacionaPitch(-NAIL_ROT_INCREMENT);
-            break;
-        case "z": // Roll clockwise
-            gNail.rotacionaRoll(NAIL_ROT_INCREMENT);
-            break;
-        case "c": // Roll counter-clockwise
-            gNail.rotacionaRoll(-NAIL_ROT_INCREMENT);
-            break;
-    }
-};
 
 const vertexShaderSource = `#version 300 es
 in vec3 aPosition;

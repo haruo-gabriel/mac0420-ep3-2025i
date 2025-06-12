@@ -2,25 +2,26 @@ var gNail;
 
 class Nail {
     constructor() {
-        this.position = vec3(0, 0, 3); // Camera position in world space
-        this.worldUp = vec3(0, 1, 0);  // Fixed up vector
+		// Posição da câmera no espaço global
+        this.position = vec3(0, 0, 3);
+
+        this.worldUp = vec3(0, 1, 0);
         
-        // Camera orientation in Euler angles (in radians)
-        this.yaw = -Math.PI / 2;        // Horizontal angle (initially looking along -z)
-        this.pitch = 0;                 // Vertical angle
-        this.roll = 0;                  // Roll around view direction
+        // Ângulos de rotação de câmera (radianos) 
+        this.yaw = -Math.PI / 2;
+        this.pitch = 0;
+        this.roll = 0;
         
-        // Movement and rotation speeds
+        // Velocidade de translação
         this.vel = 0.0;
         
-        // Perspective settings
+        // Parâmetros de perspectiva
         this.fovy = 45.0;
         this.aspect = 1.0;
         this.near = 1;
         this.far = 2000;
         
-        // Calculate initial camera vectors
-        this.atualizaCameraVectors();
+        this.atualizaCamera();
     }
 
     atualizaVel(increment) {
@@ -34,41 +35,34 @@ class Nail {
         console.log("Velocidade da agulha: ", this.vel);
     }
 
-    atualizaCameraVectors() {
-        // Calculate front vector from yaw and pitch
-        this.front = vec3(
+    atualizaCamera() {
+        this.at = vec3(
             Math.cos(this.yaw) * Math.cos(this.pitch),
             Math.sin(this.pitch),
             Math.sin(this.yaw) * Math.cos(this.pitch)
         );
-        this.front = normalize(this.front);
+        this.at = normalize(this.at);
         
-        // Calculate right and up vectors
-        this.right = normalize(cross(this.front, this.worldUp));
-        this.up = normalize(cross(this.right, this.front));
+        this.right = normalize(cross(this.at, this.worldUp));
+        this.up = normalize(cross(this.right, this.at));
         
-        // Calculate the target/center point based on position and front direction
-        this.center = add(this.position, this.front);
+        this.center = add(this.position, this.at);
         
-        // Apply roll if needed
         if (this.roll !== 0) {
-            const rollMat = rotate(this.roll * 180 / Math.PI, this.front);
+            const rollMat = rotate(this.roll * 180 / Math.PI, this.at);
             const rolledUp = mult(rollMat, vec4(this.up[0], this.up[1], this.up[2], 0.0));
             this.up = vec3(rolledUp[0], rolledUp[1], rolledUp[2]);
         }
     }
 
-    // Rotate horizontally (around world up axis)
     rotacionaYaw(angle) {
         this.yaw += angle;
-        this.atualizaCameraVectors();
+        this.atualizaCamera();
     }
 
-    // Rotate vertically (around right axis)
     rotacionaPitch(angle) {
-        // Limit pitch to avoid gimbal lock
         this.pitch = Math.max(Math.min(this.pitch + angle, Math.PI/2 - 0.01), -Math.PI/2 + 0.01);
-        this.atualizaCameraVectors();
+        this.atualizaCamera();
     }
 
 	rotacionaRoll(angle) {
@@ -78,20 +72,18 @@ class Nail {
 		} else if (this.roll <= -Math.PI / 2) {
 			this.roll = -Math.PI / 2;
 		}
-		this.atualizaCameraVectors();
+		this.atualizaCamera();
 	}
 
     moveForward() {
-        // Only move if velocity isn't zero
         if (this.vel !== 0) {
-            // Calculate movement vector based on current direction
-            let movement = scale(this.vel, this.front);
+			// Calcula o vetor de deslocamento
+            let movement = scale(this.vel, this.at);
             
-            // Update camera position
+            // Atualiza a posição da câmera
             this.position = add(this.position, movement);
             
-            // Update camera vectors to reflect the new position
-            this.atualizaCameraVectors();
+            this.atualizaCamera();
         }
     }
 

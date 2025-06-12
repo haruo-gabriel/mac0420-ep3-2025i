@@ -33,8 +33,8 @@ var DEBUG = false;
 const BOLHA_NUMERO = 20; // Numero de bolhas na cena
 const BOLHA_PHONG_ALFA_MIN = 50;
 const BOLHA_PHONG_ALFA_MAX = 500;
-const BOLHA_MIN_VEL = 0.000; // translacao em e rotacao por eixo
-const BOLHA_MAX_VEL = 0.002;
+const BOLHA_MIN_VEL = 0.001; // translacao em e rotacao por eixo
+const BOLHA_MAX_VEL = 0.003;
 const BOLHA_MIN_POS = -1.0; // posicao em cada eixo
 const BOLHA_MAX_POS = 1.0;
 const BOLHA_MIN_RAIO = 0.01;
@@ -64,9 +64,3 @@ const LUZ = {
 // 	vtrans: 1,
 // 	theta: vec3(45, -45, 0),
 // };
-
-const MATERIAL = {
-	ambientColor: vec4(0.8, 0.8, 0.8, 1.0),
-	diffuseColor: vec4(1.0, 0.5, 1.0, 1.0),
-	shininess: 50.0,
-};

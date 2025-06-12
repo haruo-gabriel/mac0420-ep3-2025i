@@ -18,15 +18,39 @@ function main() {
 		const initial_pos = vec3(
 			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
 			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
-			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
+			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS)
 		);
 		const vel = vec3(
 			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL),
 			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL),
-			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL),
+			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL)
 		);
 		const scale = randomRange(BOLHA_MIN_RAIO, BOLHA_MAX_RAIO);
-		gBaloes.push(new Esfera(ndivisoes, initial_pos, vel, scale));
+		const ambientColor = vec4(
+			randomRange(0, 1.0),
+			randomRange(0, 1.0),
+			randomRange(0, 1.0),
+			randomRange(BOLHA_PHONG_ALFA_MIN, BOLHA_PHONG_ALFA_MAX)
+		);
+		const diffuseColor = vec4(
+			randomRange(0, 1.0),
+			randomRange(0, 1.0),
+			randomRange(0, 1.0),
+			randomRange(BOLHA_PHONG_ALFA_MIN, BOLHA_PHONG_ALFA_MAX)
+		);
+		const shininess = randomRange(0, 1.0);
+
+		gBaloes.push(
+			new Esfera(
+				ndivisoes,
+				initial_pos,
+				vel,
+				scale,
+				ambientColor,
+				diffuseColor,
+				shininess
+			)
+		);
 	}
 
 	criaShaders();
@@ -36,6 +60,8 @@ function main() {
 	gl.enable(gl.DEPTH_TEST);
 
 	criaInterface();
+
+	atualizaCena();
 
 	renderizaCena();
 }
@@ -64,28 +90,34 @@ function criaShaders() {
 	);
 
 	// Matriz perspectiva
-	perspectiveMatrix = perspective(gNail.fovy, gNail.aspect, gNail.near, gNail.far);
+	perspectiveMatrix = perspective(
+		gNail.fovy,
+		gNail.aspect,
+		gNail.near,
+		gNail.far
+	);
 	gl.uniformMatrix4fv(uPerspective, false, flatten(perspectiveMatrix));
 
-	// Parâmetros de luz
+	// Parâmetros de iluminação
 	uLightPos = gl.getUniformLocation(program, "uLightPos");
 	uAmbientColor = gl.getUniformLocation(program, "uAmbientColor");
 	uDiffuseColor = gl.getUniformLocation(program, "uDiffuseColor");
 	uSpecularColor = gl.getUniformLocation(program, "uSpecularColor");
 	uShininess = gl.getUniformLocation(program, "uShininess");
+}
 
-	gl.uniform4fv(uLightPos, LUZ.position);
-	gl.uniform4fv(uAmbientColor, mult(LUZ.ambientColor, MATERIAL.ambientColor));
-	gl.uniform4fv(uDiffuseColor, mult(LUZ.diffuseColor, MATERIAL.diffuseColor));
-	gl.uniform4fv(uSpecularColor, LUZ.specularColor);
-	gl.uniform1f(uShininess, MATERIAL.shininess);
+function atualizaCena() {
+	for (let balao of gBaloes) {
+		balao.atualiza();
+	}
 }
 
 function renderizaCena() {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
-	for (let i = 0; i < gBaloes.length; i++) {
-		gBaloes[i].renderiza();
+	for (let balao of gBaloes) {
+		balao.atualiza();
+		balao.renderiza();
 	}
 
 	window.requestAnimationFrame(renderizaCena);
@@ -93,17 +125,32 @@ function renderizaCena() {
 
 window.onkeydown = function (event) {
 	switch (event.key) {
-		case "ArrowUp":
+		// Comandos de translação da câmera
+		case "j": // Diminui a velocidade de translação
+			break;
+		case "k": // Zera a velocidade de translação
+			break;
+		case "l": // Aumenta a velocidade de translação
+			break;
+
+		// Comandos de rotação da câmera
+		case "x": // Gira para cima
 			gNail.pho = Math.min(gNail.pho + gNail.step, Math.PI / 2);
 			break;
-		case "ArrowDown":
+		case "w": // Gira para baixo
 			gNail.pho = Math.max(gNail.pho - gNail.step, -Math.PI / 2);
 			break;
-		case "ArrowLeft":
-			gNail.theta = Math.max(gNail.theta - gNail.step, -Math.PI);
+		case "a": // Gira para esquerda
+			gNail.theta = Math.max(gNail.theta - gNail.step, -Math.PI / 2);
 			break;
-		case "ArrowRight":
-			gNail.theta = Math.min(gNail.theta + gNail.step, Math.PI);
+		case "d": // Gira para direita
+			gNail.theta = Math.min(gNail.theta + gNail.step, Math.PI / 2);
+			break;
+		case "z": // Gira no próprio eixo no sentido horário
+			gNail.roll = Math.min(gNail.roll + gNail.step, Math.PI / 2);
+			break;
+		case "c": // Gira no próprio eixo no sentido anti-horário
+			gNail.roll = Math.max(gNail.roll - gNail.step, -Math.PI / 2);
 			break;
 	}
 };

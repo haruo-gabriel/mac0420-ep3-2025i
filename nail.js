@@ -14,6 +14,25 @@ class Nail {
 		this.raio = 3;
 		this.theta = 0;
 		this.pho = 0;
+		this.roll = 0;
 		this.step = Math.PI / 18; // em radianos
 	}
+
+    getViewMatrix() {
+        const eye = vec3(
+            this.raio * Math.sin(this.theta) * Math.cos(this.pho),
+            this.raio * Math.sin(this.pho),
+            this.raio * Math.cos(this.theta) * Math.cos(this.pho)
+        );
+
+		// Rotação no próprio eixo
+        const rollMatrix = rotateZ((this.roll * 180) / Math.PI);
+        const rolledUp = mult(
+            rollMatrix,
+            vec4(this.up[0], this.up[1], this.up[2], 0.0)
+        );
+        const upVector = vec3(rolledUp[0], rolledUp[1], rolledUp[2]);
+
+        return lookAt(eye, this.at, upVector);
+    }
 }

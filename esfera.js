@@ -5,7 +5,10 @@ class Esfera {
 		ndivisoes = 0,
 		initial_pos = vec3(0, 0, 0),
 		vel = vec3(0, 0, 0),
-		scale = 1.0
+		scale = 1.0,
+		ambientColor = vec4(1.0, 1.0, 1.0, 1.0),
+		diffuseColor = vec4(1.0, 1.0, 1.0, 1.0),
+		shininess = 1.0
 	) {
 		this.pos = [];
 		this.initial_pos = initial_pos;
@@ -13,9 +16,11 @@ class Esfera {
 		this.vel = vel;
 		this.scale = scale;
 		this.nor = [];
+		this.ambientColor = ambientColor;
+		this.diffuseColor = diffuseColor;
+		this.shininess = shininess;
 		this.axis = 0;
 		this.theta = vec3(0.0, 0.0, 0.0);
-		this.color = [];
 		this.paused = false;
 		this.vao = gl.createVertexArray();
 
@@ -68,21 +73,12 @@ class Esfera {
 		const posLoc = gl.getAttribLocation(program, "aPosition");
 		gl.vertexAttribPointer(posLoc, 3, gl.FLOAT, false, 0, 0);
 		gl.enableVertexAttribArray(posLoc);
-
-		// Buffer de cores
-		// gl.bindBuffer(gl.ARRAY_BUFFER, gl.createBuffer());
-		// gl.bufferData(gl.ARRAY_BUFFER, flatten(this.color), gl.STATIC_DRAW);
-		// const colorLoc = gl.getAttribLocation(program, "aColor");
-		// gl.vertexAttribPointer(colorLoc, 3, gl.FLOAT, false, 0, 0);
-		// gl.enableVertexAttribArray(colorLoc);
 	}
 
 	atualiza() {
 		if (!this.paused) {
-			// Atualiza posição
-			this.center[0] += this.vel[0];
-			this.center[1] += this.vel[1];
-			this.center[2] += this.vel[2];
+			// Atualiza posição (apenas para cair)
+			this.center[1] -= this.vel[1];
 
 			// Atualiza rotação
 			this.theta[this.axis] += 1.0;
@@ -91,8 +87,6 @@ class Esfera {
 
 	renderiza() {
 		gl.bindVertexArray(this.vao);
-
-		this.atualiza();
 
 		// Translação
 		const translation = mat4();
@@ -114,20 +108,19 @@ class Esfera {
 		scale[2][2] = this.scale;
 		scale[3][3] = 1.0;
 
+		// Cor
+		gl.uniform4fv(uAmbientColor, mult(LUZ.ambientColor, this.ambientColor));
+		gl.uniform4fv(uDiffuseColor, mult(LUZ.diffuseColor, this.diffuseColor));
+		gl.uniform4fv(uLightPos, LUZ.position);
+		gl.uniform4fv(uSpecularColor, LUZ.specularColor);
+		gl.uniform1f(uShininess, this.shininess);
+
 		// Matriz model
 		let modelMatrix = mult(translation, rotation);
 		modelMatrix = mult(modelMatrix, scale);
 
-		// Matriz view
-		const r = gNail.raio;
-		const theta = gNail.theta;
-		const pho = gNail.pho;
-		const eye = vec3(
-			r * Math.sin(theta) * Math.cos(pho),
-			r * Math.sin(pho),
-			r * Math.cos(theta) * Math.cos(pho)
-		);
-		viewMatrix = lookAt(eye, gNail.at, gNail.up);
+		// Get view matrix from camera
+		viewMatrix = gNail.getViewMatrix();
 		gl.uniformMatrix4fv(uView, false, flatten(viewMatrix));
 
 		const modelViewMatrix = mult(viewMatrix, modelMatrix);
@@ -174,7 +167,16 @@ class Esfera {
 		// Normal do triângulo
 		const v1 = subtract(b, a);
 		const v2 = subtract(c, a);
-		const normal = vec3(cross(v1, v2));
+		let normal = vec3(cross(v1, v2));
+
+		let center = vec3(
+			(a[0] + b[0] + c[0]) / 3.0,
+			(a[1] + b[1] + c[1]) / 3.0,
+			(a[2] + b[2] + c[2]) / 3.0
+		);
+		if (dot(normal, center) < 0) {
+			normal = negate(normal);
+		}
 
 		this.nor.push(normal, normal, normal);
 	}

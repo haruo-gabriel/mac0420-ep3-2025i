@@ -115,6 +115,8 @@ function atualizaCena() {
 function renderizaCena() {
 	gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
+	gNail.moveForward();
+
 	for (let balao of gBaloes) {
 		balao.atualiza();
 		balao.renderiza();
@@ -124,35 +126,38 @@ function renderizaCena() {
 }
 
 window.onkeydown = function (event) {
-	switch (event.key) {
-		// Comandos de translação da câmera
-		case "j": // Diminui a velocidade de translação
+    switch (event.key) {
+		// Camera velocity controls
+		case "j":
+			gNail.atualizaVel(-NAIL_VEL_INCREMENT);
 			break;
-		case "k": // Zera a velocidade de translação
+		case "k": 
+			gNail.atualizaVel(0.0);
 			break;
-		case "l": // Aumenta a velocidade de translação
+		case "l":
+			gNail.atualizaVel(+NAIL_VEL_INCREMENT);
 			break;
 
-		// Comandos de rotação da câmera
-		case "x": // Gira para cima
-			gNail.pho = Math.min(gNail.pho + gNail.step, Math.PI / 2);
-			break;
-		case "w": // Gira para baixo
-			gNail.pho = Math.max(gNail.pho - gNail.step, -Math.PI / 2);
-			break;
-		case "a": // Gira para esquerda
-			gNail.theta = Math.max(gNail.theta - gNail.step, -Math.PI / 2);
-			break;
-		case "d": // Gira para direita
-			gNail.theta = Math.min(gNail.theta + gNail.step, Math.PI / 2);
-			break;
-		case "z": // Gira no próprio eixo no sentido horário
-			gNail.roll = Math.min(gNail.roll + gNail.step, Math.PI / 2);
-			break;
-		case "c": // Gira no próprio eixo no sentido anti-horário
-			gNail.roll = Math.max(gNail.roll - gNail.step, -Math.PI / 2);
-			break;
-	}
+        // Camera rotation controls
+        case "d": // Rotate left
+            gNail.rotacionaYaw(+NAIL_ROT_INCREMENT);
+            break;
+        case "a": // Rotate right
+            gNail.rotacionaYaw(-NAIL_ROT_INCREMENT);
+            break;
+        case "w": // Rotate up
+            gNail.rotacionaPitch(NAIL_ROT_INCREMENT);
+            break;
+        case "x": // Rotate down
+            gNail.rotacionaPitch(-NAIL_ROT_INCREMENT);
+            break;
+        case "z": // Roll clockwise
+            gNail.rotacionaRoll(NAIL_ROT_INCREMENT);
+            break;
+        case "c": // Roll counter-clockwise
+            gNail.rotacionaRoll(-NAIL_ROT_INCREMENT);
+            break;
+    }
 };
 
 const vertexShaderSource = `#version 300 es

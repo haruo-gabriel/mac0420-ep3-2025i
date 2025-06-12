@@ -13,15 +13,20 @@ function main() {
 
 	gNail = new Nail();
 
-	for (let i = 0; i < 1; i++) {
-		let ndivisoes = randomRange(BOLHA_MIN_RESOLUCAO, BOLHA_MAX_RESOLUCAO);
-		// let center = [
-		// 	randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
-		// 	randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
-		// 	randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
-		// ];
-		// let center = [0, 0, 0]; // Centralizando a esfera
-		gBaloes.push(new Esfera(ndivisoes));
+	for (let i = 0; i < BOLHA_NUMERO; i++) {
+		const ndivisoes = randomRange(BOLHA_MIN_RESOLUCAO, BOLHA_MAX_RESOLUCAO);
+		const initial_pos = vec3(
+			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
+			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
+			randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
+		);
+		const vel = vec3(
+			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL),
+			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL),
+			randomRange(BOLHA_MIN_VEL, BOLHA_MAX_VEL),
+		);
+		const scale = randomRange(BOLHA_MIN_RAIO, BOLHA_MAX_RAIO);
+		gBaloes.push(new Esfera(ndivisoes, initial_pos, vel, scale));
 	}
 
 	criaShaders();

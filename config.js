@@ -17,15 +17,28 @@ let uAmbientColor, uDiffuseColor, uSpecularColor, uShininess;
 var DEBUG = false;
 
 // BOLHAS
+// const BOLHA_NUMERO = 20; // Numero de bolhas na cena
+// const BOLHA_PHONG_ALFA_MIN = 50;
+// const BOLHA_PHONG_ALFA_MAX = 500;
+// const BOLHA_MIN_VEL = 1; // translacao em e rotacao por eixo
+// const BOLHA_MAX_VEL = 5;
+// const BOLHA_MIN_POS = -100; // posicao em cada eixo
+// const BOLHA_MAX_POS = 100;
+// const BOLHA_MIN_RAIO = 10;
+// const BOLHA_MAX_RAIO = 30;
+// const BOLHA_MIN_RESOLUCAO = 0; // balão
+// const BOLHA_MAX_RESOLUCAO = 4; // esfera
+
+// BOLHAS (constantesde TESTE)
 const BOLHA_NUMERO = 20; // Numero de bolhas na cena
 const BOLHA_PHONG_ALFA_MIN = 50;
 const BOLHA_PHONG_ALFA_MAX = 500;
-const BOLHA_MIN_VEL = 1; // translacao em e rotacao por eixo
-const BOLHA_MAX_VEL = 5;
-const BOLHA_MIN_POS = -100; // posicao em cada eixo
-const BOLHA_MAX_POS = 100;
-const BOLHA_MIN_RAIO = 10;
-const BOLHA_MAX_RAIO = 30;
+const BOLHA_MIN_VEL = 0.000; // translacao em e rotacao por eixo
+const BOLHA_MAX_VEL = 0.002;
+const BOLHA_MIN_POS = -1.0; // posicao em cada eixo
+const BOLHA_MAX_POS = 1.0;
+const BOLHA_MIN_RAIO = 0.01;
+const BOLHA_MAX_RAIO = 0.1;
 const BOLHA_MIN_RESOLUCAO = 0; // balão
 const BOLHA_MAX_RESOLUCAO = 4; // esfera
 

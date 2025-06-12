@@ -1,8 +1,17 @@
 var gBaloes = [];
 
 class Esfera {
-	constructor(ndivisoes = 0) {
+	constructor(
+		ndivisoes = 0,
+		initial_pos = vec3(0, 0, 0),
+		vel = vec3(0, 0, 0),
+		scale = 1.0
+	) {
 		this.pos = [];
+		this.initial_pos = initial_pos;
+		this.center = initial_pos;
+		this.vel = vel;
+		this.scale = scale;
 		this.nor = [];
 		this.axis = 0;
 		this.theta = vec3(0.0, 0.0, 0.0);
@@ -68,10 +77,29 @@ class Esfera {
 		// gl.enableVertexAttribArray(colorLoc);
 	}
 
+	atualiza() {
+		if (!this.paused) {
+			// Atualiza posição
+			this.center[0] += this.vel[0];
+			this.center[1] += this.vel[1];
+			this.center[2] += this.vel[2];
+
+			// Atualiza rotação
+			this.theta[this.axis] += 1.0;
+		}
+	}
+
 	renderiza() {
 		gl.bindVertexArray(this.vao);
 
-		if (!this.paused) this.theta[this.axis] += 1.0;
+		this.atualiza();
+
+		// Translação
+		const translation = mat4();
+		translation[0][3] = this.center[0];
+		translation[1][3] = this.center[1];
+		translation[2][3] = this.center[2];
+		translation[3][3] = 1.0;
 
 		// Rotação
 		const rx = rotateX(this.theta[0]);
@@ -79,12 +107,16 @@ class Esfera {
 		const rz = rotateZ(this.theta[2]);
 		const rotation = mult(rz, mult(ry, rx));
 
-		// Translação
-		// const translation = translate(this.center);
+		// Escala
+		const scale = mat4();
+		scale[0][0] = this.scale;
+		scale[1][1] = this.scale;
+		scale[2][2] = this.scale;
+		scale[3][3] = 1.0;
 
 		// Matriz model
-		// const modelMatrix = mult(translation, rotation);
-		const modelMatrix = rotation;
+		let modelMatrix = mult(translation, rotation);
+		modelMatrix = mult(modelMatrix, scale);
 
 		// Matriz view
 		const r = gNail.raio;

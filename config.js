@@ -57,10 +57,3 @@ const MATERIAL = {
 	diffuseColor: vec4(1.0, 0.5, 1.0, 1.0),
 	shininess: 50.0,
 };
-
-let camera = {
-	raio: 3,
-	theta: 0,
-	pho: 0,
-	step: Math.PI / 18,
-};

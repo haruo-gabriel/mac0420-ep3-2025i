@@ -20,8 +20,8 @@ function main() {
 		// 	randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
 		// 	randomRange(BOLHA_MIN_POS, BOLHA_MAX_POS),
 		// ];
-		let center = [0, 0, 0]; // Centralizando a esfera
-		gBaloes.push(new Esfera(ndivisoes, center));
+		// let center = [0, 0, 0]; // Centralizando a esfera
+		gBaloes.push(new Esfera(ndivisoes));
 	}
 
 	criaShaders();
@@ -89,16 +89,16 @@ function renderizaCena() {
 window.onkeydown = function (event) {
 	switch (event.key) {
 		case "ArrowUp":
-			camera.pho = Math.min(camera.pho + camera.step, Math.PI / 2);
+			gNail.pho = Math.min(gNail.pho + gNail.step, Math.PI / 2);
 			break;
 		case "ArrowDown":
-			camera.pho = Math.max(camera.pho - camera.step, -Math.PI / 2);
+			gNail.pho = Math.max(gNail.pho - gNail.step, -Math.PI / 2);
 			break;
 		case "ArrowLeft":
-			camera.theta = Math.max(camera.theta - camera.step, -Math.PI);
+			gNail.theta = Math.max(gNail.theta - gNail.step, -Math.PI);
 			break;
 		case "ArrowRight":
-			camera.theta = Math.min(camera.theta + camera.step, Math.PI);
+			gNail.theta = Math.min(gNail.theta + gNail.step, Math.PI);
 			break;
 	}
 };

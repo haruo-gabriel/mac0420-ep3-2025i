@@ -1,15 +1,14 @@
 var gBaloes = [];
 
 class Esfera {
-	constructor(ndivisoes = 0, center = [0, 0, 0]) {
-		this.vao = null;
+	constructor(ndivisoes = 0) {
 		this.pos = [];
-		// this.center = center;
 		this.nor = [];
 		this.axis = 0;
 		this.theta = vec3(0.0, 0.0, 0.0);
 		this.color = [];
 		this.paused = false;
+		this.vao = gl.createVertexArray();
 
 		const vp = [
 			// Vértices positivos
@@ -40,9 +39,6 @@ class Esfera {
 			[a, b, c] = triangulo[i];
 			this.dividaTriangulo(a, b, c, ndivisoes);
 		}
-
-		// Criação do VAO
-		this.vao = gl.createVertexArray();
 
 		console.log(triangulo);
 	}
@@ -91,15 +87,15 @@ class Esfera {
 		const modelMatrix = rotation;
 
 		// Matriz view
-		const r = camera.raio;
-		const theta = camera.theta;
-		const pho = camera.pho;
+		const r = gNail.raio;
+		const theta = gNail.theta;
+		const pho = gNail.pho;
 		const eye = vec3(
 			r * Math.sin(theta) * Math.cos(pho),
 			r * Math.sin(pho),
 			r * Math.cos(theta) * Math.cos(pho)
 		);
-		viewMatrix = lookAt(eye, nail.at, nail.up);
+		viewMatrix = lookAt(eye, gNail.at, gNail.up);
 		gl.uniformMatrix4fv(uView, false, flatten(viewMatrix));
 
 		const modelViewMatrix = mult(viewMatrix, modelMatrix);
